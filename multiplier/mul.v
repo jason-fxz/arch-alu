@@ -4,17 +4,15 @@ module multiplier(
     output [31:0] res
 );
     reg [31:0] tmp;
-    reg [15:0] multiplier;
     reg [31:0] multiplicand;
     integer i;
 
     always @(*) begin
         tmp = 0;
-        multiplier = b;
         multiplicand = {16'b0, a}; 
 
         for (i = 0; i < 16; i = i + 1) begin
-            if (multiplier[i] == 1) begin
+            if (b[i] == 1) begin
                 tmp = tmp + multiplicand;
             end
             multiplicand = multiplicand << 1;
@@ -23,3 +21,5 @@ module multiplier(
 
     assign res = tmp;
 endmodule
+
+// https://www.cnblogs.com/lyc-seu/p/12842399.html

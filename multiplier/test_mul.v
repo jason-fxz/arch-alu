@@ -14,7 +14,7 @@
  *
  */
 
-`include "mul.v"
+`include "mul1.v"
 
 module test_adder;
 	wire [31:0] answer;
