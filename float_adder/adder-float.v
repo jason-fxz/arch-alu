@@ -4,7 +4,7 @@ module float_adder(
     input   [31:0]  x,
     input   [31:0]  y,
     output  reg [31:0]  z,
-    output  reg [1:0]   overflow//2'b00:没有溢出    2'b01:上溢  2'b10:下溢  2'b11:输入 NaN
+    output  reg [1:0]   overflow//2'b00:没有溢出   2'b01:上溢  2'b10:下溢  2'b11:输入 NaN/inf
 );
     // 31-31  30-23  22-0
     // 1bit | 8bit | 23bit
@@ -40,7 +40,7 @@ module float_adder(
     
     always @(posedge clk or negedge rst) begin
         if (!rst) begin
-            $display("RESET");
+            //$display("RESET");
             state_now <= S_start;
         end
         else begin
@@ -51,13 +51,13 @@ module float_adder(
     always @(state_now, x, y) begin
         case(state_now)
             S_start: begin
-                e_x <= x[30:23];
-                e_y <= y[30:23];
-                m_x <= {2'b01 , x[22:0]}; // 留了一个空位方便进位
-                m_y <= {2'b01, y[22:0]};
-                s_x <= x[31];
-                s_y <= y[31];
-                $display("Hello x = %d y = %d", x, y);
+                e_x = x[30:23];
+                e_y = y[30:23];
+                m_x = {2'b01 , x[22:0]}; // 留了一个空位方便进位
+                m_y = {2'b01, y[22:0]};
+                s_x = x[31];
+                s_y = y[31];
+                //$display("Hello x = %b y = %b; e_x=%b e_y=%b", x, y, e_x, e_y);
 
                 // 一些特判
                 // 输入有 NaN，=> NaN
@@ -72,6 +72,7 @@ module float_adder(
                 else if ((e_x == 8'd255 && m_x[22:0] == 0) || (e_y == 8'd255 && m_y[22:0] == 0)) begin
                     // 两个 inf 相加 且符号不同, => NaN
                     // 否则，返回对应符号的 inf
+                    //$display("inf+inf");
                     overflow <= 2'b11;
                     state_next <= S_overflow;
                     s_z <= s_x;
@@ -113,7 +114,7 @@ module float_adder(
             end
             S_align: begin
                 // 对阶
-                $display("align !" );
+                //$display("align !" );
                 if (e_x == e_y) begin
                    e_z <= e_x;
                     m_x_ext <= {m_x[23:0], 3'b0};
@@ -123,7 +124,7 @@ module float_adder(
                     m_x_ext <= {m_x >> (e_y - e_x), 3'b0};
                     m_y_ext <= {m_y[23:0], 3'b0};
                 end else begin// (e_x > e_y)
-                    $display("e_x > e_y");
+                    //$display("e_x > e_y");
                     e_z <= e_x;
                     m_x_ext <= {m_x[23:0], 3'b0};
                     m_y_ext <= {m_y >> (e_x - e_y), 3'b0};
@@ -132,7 +133,7 @@ module float_adder(
                 state_next <= S_add;
             end
             S_add: begin
-                $display("m_x_ext = %b m_y_ext = %b", m_x_ext, m_y_ext);
+                //$display("m_x_ext = %b m_y_ext = %b", m_x_ext, m_y_ext);
                 if (s_x == s_y) begin
                     m_z_ext <= m_x_ext + m_y_ext;
 
@@ -156,18 +157,19 @@ module float_adder(
                 end
             end
             S_normal: begin
-                $display("normal m_z_ext = %b", m_z_ext);
+                //$display("normal m_z_ext = %b", m_z_ext);
                 if (m_z_ext[27] == 1'b1) begin
                     // 有进位
                     if (e_z == 8'd254) begin
                         // 上溢 inf 
-                        $display("carry ! inf");
+                        //$display("carry ! inf");
                         s_z <= s_x;
                         e_z <= 8'd255;
                         m_z <= 0; 
+                        overflow <= 2'b01;
                         state_next <= S_overflow;
                     end else begin
-                        $display("carry ! e_z = %d e_z+1 = %d", e_z, e_z + 8'b1);
+                        //$display("carry ! e_z = %d e_z+1 = %d", e_z, e_z + 8'b1);
                         m_z <= {1'b0, m_z_ext[26:4]};
                         e_z <= e_z + 8'b1;
                         state_next <= S_overflow;
@@ -176,7 +178,7 @@ module float_adder(
                 begin
                     if (m_z_ext[26] == 1'b0 && e_z >= 1) begin
                         // 需要左移
-                        $display("need shift %d", 26 - shift_bit);
+                        //$display("need shift %d", 26 - shift_bit);
                         m_z <= (m_z_ext << (6'd26 - shift_bit)) >> 3;
                         e_z <= e_z + shift_bit - 6'd26;
                         state_next <= S_overflow;
@@ -189,7 +191,7 @@ module float_adder(
             end
             S_overflow: begin
                 z = {s_z, e_z[7:0], m_z[22:0]};
-                $display("s=%b e=%b m=%b", s_z, e_z, m_z[22:0]);
+                //$display("s=%b e=%b m=%b", s_z, e_z, m_z[22:0]);
                 overflow <= overflow;
                 state_next <= S_IDLE;
             end

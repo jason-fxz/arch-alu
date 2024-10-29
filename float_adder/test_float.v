@@ -29,7 +29,7 @@ module floatadd_tb();
         rst=1'b0; #10 rst=1'b1; #10
         // 0x3FAA3D70	0b00111111101010100011110101110000
         #1000
-        $display("Test: %b + %b = %b", x, y, z);
+        $display("Test: %b + %b = %b %b", x, y, z, overflow);
         if (z !== ans) begin
             $display("Wrong Answer!");
         end
@@ -40,7 +40,7 @@ module floatadd_tb();
         rst=1'b0; #10 rst=1'b1; #10
         // 0x424D3333	0b01000010010011010011001100110011
         #1000
-        $display("Test: %b + %b = %b", x, y, z);
+        $display("Test: %b + %b = %b %b", x, y, z, overflow);
         if (z !== ans) begin
             $display("Wrong Answer!");
         end
@@ -51,7 +51,7 @@ module floatadd_tb();
         rst=1'b0; #10 rst=1'b1; #10
         // 0x1FFFFFF5	0b00011111111111111111111111110101
         #1000
-        $display("Test: %b + %b = %b", x, y, z);
+        $display("Test: %b + %b = %b %b", x, y, z, overflow);
         if (z !== ans) begin
             $display("Wrong Answer!");
         end
@@ -62,7 +62,7 @@ module floatadd_tb();
         ans=32'h4248CCCC; // 50.2
         rst=1'b0; #10 rst=1'b1; #10
         #1000
-        $display("Test: %b + %b = %b", x, y, z);
+        $display("Test: %b + %b = %b %b", x, y, z, overflow);
         if (z !== ans) begin
             $display("Wrong Answer!");
         end
@@ -72,7 +72,7 @@ module floatadd_tb();
         ans=32'h4248CCCC; // 50.2
         rst=1'b0; #10 rst=1'b1; #10
         #1000
-        $display("Test: %b + %b = %b", x, y, z);
+        $display("Test: %b + %b = %b %b", x, y, z, overflow);
         if (z !== ans) begin
             $display("Wrong Answer!");
         end
@@ -82,7 +82,7 @@ module floatadd_tb();
         ans=32'h43960000; // 300
         rst=1'b0; #10 rst=1'b1; #10
         #1000
-        $display("Test: %b + %b = %b", x, y, z);
+        $display("Test: %b + %b = %b %b", x, y, z, overflow);
         if (z !== ans) begin
             $display("Wrong Answer!");
         end
@@ -93,7 +93,7 @@ module floatadd_tb();
         // 0x3F333334	0b00111111001100110011001100110100
         rst=1'b0; #10 rst=1'b1; #10
         #1000
-        $display("Test: %b + %b = %b", x, y, z);
+        $display("Test: %b + %b = %b %b", x, y, z, overflow);
         if (z !== ans) begin
             $display("Wrong Answer!");
         end
@@ -101,15 +101,46 @@ module floatadd_tb();
 
         
         x=32'h7F7FFFFF;
-        y=32'h7F7FFFFF;//验证上溢出 overflow=2'b01 7FFFFFFF
+        y=32'h7F7FFFFF;//验证上溢出 overflow=2'b01 7FFFFFFF +inf
         ans=32'h7F800000;
         rst=1'b0; #10 rst=1'b1; #10
         #1000
-        $display("Test: %b + %b = %b", x, y, z);
+        $display("Test: %b + %b = %b %b", x, y, z, overflow);
         if (z !== ans) begin
             $display("Wrong Answer!");
         end
 
+
+        x=32'hFF7FFFFF;
+        y=32'hFF7FFFFF;//验证上溢出 overflow=2'b01 FFFFFFFF -inf
+        ans=32'hFF800000;
+        rst=1'b0; #10 rst=1'b1; #10
+        #1000
+        $display("Test: %b + %b = %b %b", x, y, z, overflow);
+        if (z !== ans) begin
+            $display("Wrong Answer!");
+        end
+
+        x=32'hFF800000; // -inf
+        y=32'h7F800000; // +inf
+        ans=32'hFFFFFFFF; //NaN
+        rst=1'b0; #10 rst=1'b1; #10
+        #1000
+        $display("Test: %b + %b = %b %b", x, y, z, overflow);
+        if (z !== ans) begin
+            $display("Wrong Answer!");
+        end
+
+
+        x=32'hFF800000; // -inf
+        y=32'h46406000; // 12312.0
+        ans=32'hFF800000; //-inf
+        rst=1'b0; #10 rst=1'b1; #10
+        #1000
+        $display("Test: %b + %b = %b %b", x, y, z, overflow);
+        if (z !== ans) begin
+            $display("Wrong Answer!");
+        end
 
         #2000 $finish;
     end
